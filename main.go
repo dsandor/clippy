@@ -282,6 +282,10 @@ func (c *Clippy) handleCredentialsSet(awsCredentials string, rules AutoSetRules)
 	for _, rule := range rules.Rules {
 		if strings.Contains(credProfileName, rule.AccountNumber) && rule.IsEnabled {
 			c.setProfile(section, rule.Profile)
+			fyne.CurrentApp().SendNotification(&fyne.Notification{
+				Title:   "Clippy",
+				Content: fmt.Sprintf("Profile '%s' updated.", rule.Profile),
+			})
 			break
 		}
 	}
