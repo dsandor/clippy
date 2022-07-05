@@ -51,6 +51,7 @@ type Clippy struct {
 	RemoteUpdateServerConfig RemoteUpdateServerConfig `json:"remoteUpdateServerConfig"`
 	AutoSetRules             AutoSetRules             `json:"autoSetRules"`
 	textCredentialsData      string
+	textSendToCsv            string
 }
 
 type ViewModel struct {
@@ -66,6 +67,9 @@ type ViewModel struct {
 	ChkAcceptRemoteUpdates   binding.Bool
 	TextListenPort           binding.String
 	TextRemoteUpdatePassword binding.String
+
+	TextSendToCsv  binding.String
+	ChkSendUpdates binding.Bool
 }
 
 func (c *Clippy) buildAutoSetTab() *fyne.Container {
@@ -159,16 +163,22 @@ func (c *Clippy) buildReceiveTab() *fyne.Container {
 }
 
 func (c *Clippy) buildSendTab() *fyne.Container {
+	c.viewModel.TextSendToCsv = binding.BindString(&c.textSendToCsv)
+	c.viewModel.ChkSendUpdates = binding.BindBool(&c.IsSendEnabled)
+
 	remoteIpsEntry := widget.NewMultiLineEntry()
 	remoteIpsEntry.SetPlaceHolder("1.2.3.4:8787,5.6.7.8:8787")
+	remoteIpsEntry.Bind(c.viewModel.TextSendToCsv)
+	remoteIpsEntry.OnChanged = func(value string) {
+		c.SendToTargets = strings.Split(value, ",")
+	}
 
 	desc := widget.NewLabel("Configure other machines to send AWS credentials to. These remote machines must have Clippy running and must have Receive Updates configured.")
 	desc.Wrapping = fyne.TextWrapWord
 
 	tab := container.NewVBox(
 		desc,
-		widget.NewCheck("Send Updates to Remote Machines", func(b bool) {
-		}),
+		widget.NewCheckWithData("Send Updates to Remote Machines", c.viewModel.ChkSendUpdates),
 		widget.NewLabelWithStyle("Remote Machines (Comma Separated IP:Port)",
 			fyne.TextAlignLeading, fyne.TextStyle{
 				Bold:      false,
