@@ -40,7 +40,7 @@ type AutoSetRule struct {
 }
 
 type AutoSetRules struct {
-	Rules []AutoSetRule
+	Rules [10]AutoSetRule
 }
 
 type Clippy struct {
@@ -55,12 +55,17 @@ type Clippy struct {
 }
 
 type ViewModel struct {
-	ChkAutoSet1        binding.Bool
-	ChkAutoSet2        binding.Bool
+	ChkAutoSet  [10]binding.Bool
+	ChkAutoSet1 binding.Bool
+	ChkAutoSet2 binding.Bool
+
+	TextAccountNumber  [10]binding.String
 	TextAccountNumber1 binding.String
 	TextAccountNumber2 binding.String
-	TextProfile1       binding.String
-	TextProfile2       binding.String
+
+	TextProfile  [10]binding.String
+	TextProfile1 binding.String
+	TextProfile2 binding.String
 
 	TextCredentialsData binding.ExternalString
 
@@ -72,33 +77,60 @@ type ViewModel struct {
 	ChkSendUpdates binding.Bool
 }
 
+func (c *Clippy) buildAutoSetRow(index int) *fyne.Container {
+	c.viewModel.ChkAutoSet[index] = binding.BindBool(&c.AutoSetRules.Rules[index].IsEnabled)
+	c.viewModel.TextAccountNumber[index] = binding.BindString(&c.AutoSetRules.Rules[index].AccountNumber)
+	c.viewModel.TextProfile[index] = binding.BindString(&c.AutoSetRules.Rules[index].Profile)
+
+	textAccountNumberEntry := widget.NewEntryWithData(c.viewModel.TextAccountNumber[index])
+	textAccountNumberEntry.SetPlaceHolder("Account Number")
+	textAccountNumberEntry.Wrapping = fyne.TextWrapOff
+
+	textProfile := widget.NewEntryWithData(c.viewModel.TextProfile[index])
+	textProfile.SetPlaceHolder("Target Profile")
+	textProfile.Wrapping = fyne.TextWrapOff
+
+	row := container.NewHBox(
+		widget.NewCheckWithData("Auto set account number", c.viewModel.ChkAutoSet[index]),
+		textAccountNumberEntry,
+		widget.NewLabel("to profile"),
+		textProfile,
+	)
+
+	return row
+}
+
 func (c *Clippy) buildAutoSetTab() *fyne.Container {
-	c.viewModel.ChkAutoSet1 = binding.BindBool(&c.AutoSetRules.Rules[0].IsEnabled)
-	c.viewModel.ChkAutoSet2 = binding.BindBool(&c.AutoSetRules.Rules[1].IsEnabled)
+	/*
+		c.viewModel.ChkAutoSet1 = binding.BindBool(&c.AutoSetRules.Rules[0].IsEnabled)
+		c.viewModel.ChkAutoSet2 = binding.BindBool(&c.AutoSetRules.Rules[1].IsEnabled)
 
-	c.viewModel.TextAccountNumber1 = binding.BindString(&c.AutoSetRules.Rules[0].AccountNumber)
-	c.viewModel.TextAccountNumber2 = binding.BindString(&c.AutoSetRules.Rules[1].AccountNumber)
+		c.viewModel.TextAccountNumber1 = binding.BindString(&c.AutoSetRules.Rules[0].AccountNumber)
+		c.viewModel.TextAccountNumber2 = binding.BindString(&c.AutoSetRules.Rules[1].AccountNumber)
 
-	c.viewModel.TextProfile1 = binding.BindString(&c.AutoSetRules.Rules[0].Profile)
-	c.viewModel.TextProfile2 = binding.BindString(&c.AutoSetRules.Rules[1].Profile)
+		c.viewModel.TextProfile1 = binding.BindString(&c.AutoSetRules.Rules[0].Profile)
+		c.viewModel.TextProfile2 = binding.BindString(&c.AutoSetRules.Rules[1].Profile)
+	*/
 
 	c.viewModel.TextCredentialsData = binding.BindString(&c.textCredentialsData)
 
-	textAccountNumber1Entry := widget.NewEntryWithData(c.viewModel.TextAccountNumber1)
-	textAccountNumber1Entry.SetPlaceHolder("Account Number")
-	textAccountNumber1Entry.Wrapping = fyne.TextWrapOff
+	/*
+		textAccountNumber1Entry := widget.NewEntryWithData(c.viewModel.TextAccountNumber1)
+		textAccountNumber1Entry.SetPlaceHolder("Account Number")
+		textAccountNumber1Entry.Wrapping = fyne.TextWrapOff
 
-	textAccountNumber2Entry := widget.NewEntryWithData(c.viewModel.TextAccountNumber2)
-	textAccountNumber2Entry.SetPlaceHolder("Account Number")
-	textAccountNumber2Entry.Wrapping = fyne.TextWrapOff
+		textAccountNumber2Entry := widget.NewEntryWithData(c.viewModel.TextAccountNumber2)
+		textAccountNumber2Entry.SetPlaceHolder("Account Number")
+		textAccountNumber2Entry.Wrapping = fyne.TextWrapOff
 
-	textProfile1 := widget.NewEntryWithData(c.viewModel.TextProfile1)
-	textProfile1.SetPlaceHolder("Target Profile")
-	textProfile1.Wrapping = fyne.TextWrapOff
+		textProfile1 := widget.NewEntryWithData(c.viewModel.TextProfile1)
+		textProfile1.SetPlaceHolder("Target Profile")
+		textProfile1.Wrapping = fyne.TextWrapOff
 
-	textProfile2 := widget.NewEntryWithData(c.viewModel.TextProfile2)
-	textProfile2.SetPlaceHolder("Target Profile")
-	textProfile2.Wrapping = fyne.TextWrapOff
+		textProfile2 := widget.NewEntryWithData(c.viewModel.TextProfile2)
+		textProfile2.SetPlaceHolder("Target Profile")
+		textProfile2.Wrapping = fyne.TextWrapOff
+	*/
 
 	textDetectedCredentialsMLE := widget.NewMultiLineEntry()
 	textDetectedCredentialsMLE.SetMinRowsVisible(8)
@@ -107,18 +139,10 @@ func (c *Clippy) buildAutoSetTab() *fyne.Container {
 	return container.NewVBox(
 		widget.NewLabel("Detected Credentials"),
 		textDetectedCredentialsMLE,
-		container.NewHBox(
-			widget.NewCheckWithData("Auto set account number", c.viewModel.ChkAutoSet1),
-			textAccountNumber1Entry,
-			widget.NewLabel("to profile"),
-			textProfile1,
-		),
-		container.NewHBox(
-			widget.NewCheckWithData("Auto set account number", c.viewModel.ChkAutoSet2),
-			textAccountNumber2Entry,
-			widget.NewLabel("to profile"),
-			textProfile2,
-		),
+		c.buildAutoSetRow(0),
+		c.buildAutoSetRow(1),
+		c.buildAutoSetRow(2),
+		c.buildAutoSetRow(3),
 		/*widget.NewButton("Click", func() {
 			s, _ := json.Marshal(c)
 
@@ -194,7 +218,7 @@ func (c *Clippy) buildSendTab() *fyne.Container {
 }
 
 func (c *Clippy) initDefaultConfig() {
-	c.AutoSetRules = AutoSetRules{Rules: []AutoSetRule{
+	c.AutoSetRules = AutoSetRules{Rules: [10]AutoSetRule{
 		{
 			IsEnabled:     false,
 			AccountNumber: "",
